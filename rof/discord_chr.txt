@@ -1,0 +1,14 @@
+13
+xem,xem
+xef,xef
+xhm,xhm
+xhf,xhf
+rdg,rdg
+grl,grl
+nmp,nmp_chr
+fmo,fmo_chr
+lcr,lcr_chr
+sdm,sdm_chr
+bgm,bgm_chr
+aie,aie
+prt,prt
