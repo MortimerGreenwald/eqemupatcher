@@ -13,7 +13,7 @@ using System.Threading;
 
 namespace EQEmu_Patcher
 {
-    
+
     public partial class MainForm : Form
     {
 
@@ -43,7 +43,7 @@ namespace EQEmu_Patcher
             VersionTypes.Rain_Of_Fear, //rof
             VersionTypes.Rain_Of_Fear_2 //rof
             //VersionTypes.Broken_Mirror, //bro
-        }; 
+        };
 
         private Dictionary<VersionTypes, ClientVersion> clientVersions = new Dictionary<VersionTypes, ClientVersion>();
 
@@ -57,7 +57,6 @@ namespace EQEmu_Patcher
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
-
             isLoading = true;
             version = Assembly.GetEntryAssembly().GetName().Version.ToString();
             Console.WriteLine($"Initializing {version}");
@@ -157,7 +156,7 @@ namespace EQEmu_Patcher
             bool isSupported = false;
             foreach (var ver in supportedClients)
             {
-                if (ver != currentVersion) continue;                
+                if (ver != currentVersion) continue;
                 isSupported = true;
                 break;
             }
@@ -177,7 +176,7 @@ namespace EQEmu_Patcher
                     if (Environment.OSVersion.Version.Major < 6) {
                         return;
                     }
-                    var taskbar = TaskbarManager.Instance;                    
+                    var taskbar = TaskbarManager.Instance;
                     taskbar.SetProgressValue(value, 10000);
                     taskbar.SetProgressState((value == 10000) ? TaskbarProgressBarState.NoProgress : TaskbarProgressBarState.Normal);
                 });
@@ -209,7 +208,7 @@ namespace EQEmu_Patcher
             }));
 
             string webUrl = $"{filelistUrl}{suffix}/filelist_{suffix}.yml";
-            
+
             string response = await DownloadFile(cts, webUrl, "filelist.yml");
             if (response != "")
             {
@@ -249,7 +248,7 @@ namespace EQEmu_Patcher
 
             FileList filelist;
 
-            using (var input = File.OpenText("filelist.yml"))
+            using (var input = File.OpenText($"{System.IO.Path.GetDirectoryName(Application.ExecutablePath)}\\filelist.yml"))
             {
                 var deserializerBuilder = new DeserializerBuilder().WithNamingConvention(new CamelCaseNamingConvention());
 
@@ -257,7 +256,7 @@ namespace EQEmu_Patcher
 
                 filelist = deserializer.Deserialize<FileList>(input);
             }
-            
+
             if (filelist.version != IniLibrary.instance.LastPatchedVersion)
             {
                 if (!isPendingPatch)
@@ -310,15 +309,18 @@ namespace EQEmu_Patcher
                         break;
                     case "240C80800112ADA825C146D7349CE85B":
                     case "A057A23F030BAA1C4910323B131407105ACAD14D": //This is a custom ROF2 from a torrent download
+                    case "389709EC0E456C3DAE881A61218AAB3F": // This is a 4gb patched eqgame
+                    case "6574AC667D4C522D21A47F4D00920CC2": // Unknown origin, issue #29
+                    case "AE4E4C995DF8842DAE3127E88E724033": // gangsta of RoT 4gb patched eqgame                    
+                    case "3B44C6CD42313CB80C323647BCB296EF": //https://github.com/xackery/eqemupatcher/issues/15
+                    case "513FDC2B5CC63898D7962F0985D5C207": //aslr checksum removed           
+                    case "2FD5E6243BCC909D9FD0587A156A1165": //https://github.com/xackery/eqemupatcher/issues/20
+                    case "26DC13388395A20B73E1B5A08415B0F8": //Legacy of Norrath Custom RoF2 Client https://github.com/xackery/eqemupatcher/issues/16
                         currentVersion = VersionTypes.Rain_Of_Fear_2;
                         splashLogo.Image = Properties.Resources.rof;
                         break;
                     case "6BFAE252C1A64FE8A3E176CAEE7AAE60": //This is one of the live EQ binaries.
-                    case "AD970AD6DB97E5BB21141C205CAD6E68": //2016/08/27
-                    case "2FD5E6243BCC909D9FD0587A156A1165": //https://github.com/xackery/eqemupatcher/issues/20
-                    case "26DC13388395A20B73E1B5A08415B0F8": //Legacy of Norrath Custom RoF2 Client https://github.com/xackery/eqemupatcher/issues/16
-                    case "3B44C6CD42313CB80C323647BCB296EF": //https://github.com/xackery/eqemupatcher/issues/15
-                    case "513FDC2B5CC63898D7962F0985D5C207": //aslr checksum removed
+                    case "AD970AD6DB97E5BB21141C205CAD6E68": //2016/08/27         
                         currentVersion = VersionTypes.Broken_Mirror;
                         splashLogo.Image = Properties.Resources.brokenmirror;
                         break;
@@ -338,9 +340,9 @@ namespace EQEmu_Patcher
                 {
                     //StatusLibrary.Log($"You seem to have put me in a {clientVersions[currentVersion].FullName} client directory");
                 }
-                
+
                 //MessageBox.Show(""+currentVersion);
-                //StatusLibrary.Log($"If you wish to help out, press the scan button on the bottom left and wait for it to complete, then copy paste this data as an Issue on github!");                
+                //StatusLibrary.Log($"If you wish to help out, press the scan button on the bottom left and wait for it to complete, then copy paste this data as an Issue on github!");
             }
             catch (UnauthorizedAccessException err)
             {
@@ -407,7 +409,7 @@ namespace EQEmu_Patcher
         {
             path = path.Replace("/", "\\");
             if (path.Contains("\\")) { //Make directory if needed.
-                string dir = Application.StartupPath + "\\" + path.Substring(0, path.LastIndexOf("\\"));
+                string dir = System.IO.Path.GetDirectoryName(Application.ExecutablePath) + "\\" + path.Substring(0, path.LastIndexOf("\\"));
                 Directory.CreateDirectory(dir);
             }
             return await UtilityLibrary.DownloadFile(cts, url, path);
@@ -453,8 +455,8 @@ namespace EQEmu_Patcher
             StatusLibrary.Log($"Patching with patcher version {version}...");
             StatusLibrary.SetProgress(0);
             FileList filelist;
-             
-            using (var input = File.OpenText("filelist.yml"))
+
+            using (var input = File.OpenText($"{System.IO.Path.GetDirectoryName(Application.ExecutablePath)}\\filelist.yml"))
             {
                 var deserializerBuilder = new DeserializerBuilder().WithNamingConvention(new CamelCaseNamingConvention());
 
@@ -489,7 +491,7 @@ namespace EQEmu_Patcher
                         await w.WriteAsync(data, 0, data.Length, cts.Token);
                     }
                     StatusLibrary.Log($"Self update of {generateSize(data.Length)} will be used next run");
-                    
+
                 } catch (Exception e)
                 {
                     StatusLibrary.Log($"Self update failed {url}: {e.Message}");
@@ -530,7 +532,7 @@ namespace EQEmu_Patcher
 
 
                 string url = filelist.downloadprefix + entry.name.Replace("\\", "/");
-                
+
                 string resp = await DownloadFile(cts, url, entry.name);
                 if (resp != "")
                 {
@@ -579,11 +581,11 @@ namespace EQEmu_Patcher
                 {
                     version = version.Substring(0, 8);
                 }
-               
+
                 StatusLibrary.Log($"Up to date with patch {version}.");
                 return;
             }
-            
+
             string elapsed = start.Elapsed.ToString("ss\\.ff");
             StatusLibrary.Log($"Complete! Patched {generateSize(patchedBytes)} in {elapsed} seconds. Press Play to begin.");
             IniLibrary.instance.LastPatchedVersion = filelist.version;
@@ -663,7 +665,7 @@ namespace EQEmu_Patcher
     public class FileList
     {
         public string version { get; set; }
-        
+
         public List<FileEntry> deletes { get; set; }
         public string downloadprefix { get; set; }
         public List<FileEntry> downloads { get; set; }
